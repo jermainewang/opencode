@@ -1,0 +1,45 @@
+load("@rules_oci//oci:defs.bzl", "oci_image", "oci_push")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+
+# Sandbox OCI image
+#
+# Bundles the OpenCode binary, web UI assets (from the opencode submodule),
+# and drama-script-agent configuration into a single image used as the base
+# for all Daytona sandbox snapshots.
+#
+# Build:  bazel build //projects/codes/opencode:opencode_image
+# Push:   bazel run  //projects/codes/opencode:opencode_image_push
+#         (or use ./scripts/push_opencode_image.sh for the pre-Bazel path)
+#
+# TODO(bazel-phase3): Wire bun build steps for opencode binary and app assets.
+# The targets below are placeholders. The pre-Bazel equivalent is:
+#   docker build -f docker/opencode.Dockerfile .
+# which remains the operational path until Bazel bun rules are configured.
+
+# Placeholder: opencode binary + UI built via bun
+# TODO: Replace with actual bun_binary / genrule targets once rules_js bun
+#       support is confirmed for this repo's bun.lockb version.
+# pkg_tar(
+#     name = "opencode_layer",
+#     srcs = [":opencode_bin", ":opencode_ui"],
+#     package_dir = "/usr/local",
+# )
+
+# Sandbox OCI image combining opencode runtime and agent config
+oci_image(
+    name = "opencode_image",
+    base = "@ubuntu_22_04",  # pulled via oci.pull in MODULE.bazel (TODO: add oci_pull)
+    tars = [
+        # ":opencode_layer",  # TODO: uncomment when bun build targets are wired
+        "//projects/codes/drama-script-agent:agent_config_layer",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+# Push to container registry
+# Usage: bazel run //projects/codes/opencode:opencode_image_push
+oci_push(
+    name = "opencode_image_push",
+    image = ":opencode_image",
+    repository = "ghcr.io/creativefitting-agentcore-team/opencode",
+)
