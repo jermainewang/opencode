@@ -65,6 +65,14 @@ describe("POST /project/create", () => {
         .then(() => true)
         .catch(() => false)
       expect(data.gitInitialized).toBe(ok)
+
+      // Verify initial commit exists so project.fromDirectory can derive a stable project ID
+      if (ok) {
+        const { $ } = await import("bun")
+        const result = await $`git -C ${path.join(root.path, "my-script")} rev-list --max-parents=0 --all`.text()
+        const roots = result.trim().split("\n").filter(Boolean)
+        expect(roots.length).toBeGreaterThan(0)
+      }
     } finally {
       process.env.OPENCODE_TEST_HOME = prevHome
       process.env.CF_ROOT = prevRoot

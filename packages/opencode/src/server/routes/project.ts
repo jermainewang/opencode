@@ -127,6 +127,9 @@ export const ProjectRoutes = lazy(() =>
         }
 
         const result = await git(["init"], { cwd: resolved })
+        if (result.exitCode === 0) {
+          await git(["commit", "--allow-empty", "-m", "init"], { cwd: resolved })
+        }
         return c.json({
           path: resolved,
           name: sanitized,
