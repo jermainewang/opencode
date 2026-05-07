@@ -35,6 +35,11 @@ export type FileRenderProps = {
   classList?: Record<string, boolean>
   mode?: FileRenderMode
 
+  // Base URL for streaming media files (includes auth params if needed).
+  // Renderers that use browser resource URLs (e.g. <video src>) should use
+  // this instead of constructing their own URL from window.location.origin.
+  streamBase?: string
+
   enableLineSelection?: boolean
   selectedLines?: LineRange | null
   commentedLines?: LineRange[]

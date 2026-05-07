@@ -14,6 +14,8 @@ import { selectionFromLines, useFile, type FileSelection, type SelectedLineRange
 import { useComments } from "@/context/comments"
 import { useLanguage } from "@/context/language"
 import { usePrompt } from "@/context/prompt"
+import { useSDK } from "@/context/sdk"
+import { useServer } from "@/context/server"
 import { getSessionHandoff } from "@/pages/session/handoff"
 
 const formatCommentLabel = (range: SelectedLineRange) => {
@@ -36,6 +38,19 @@ export function FileTabContent(props: { tab: string }) {
   const language = useLanguage()
   const prompt = usePrompt()
   const renderer = useFileRenderer()
+  const sdk = useSDK()
+  const server = useServer()
+
+  // Base URL for streaming media — server origin + auth/directory params so that
+  // browser resource tags (<video src>) can authenticate without custom headers.
+  const streamBase = createMemo(() => {
+    const conn = server.current?.http
+    const origin = conn?.url ?? sdk.url
+    const qs = new URLSearchParams()
+    qs.set("directory", sdk.directory)
+    if (conn?.password) qs.set("_pwd", conn.password)
+    return `${origin}/file/stream?${qs}`
+  })
 
   const sessionKey = createMemo(() => `${params.dir}${params.id ? "/" + params.id : ""}`)
   const tabs = createMemo(() => layout.tabs(sessionKey))
@@ -449,7 +464,7 @@ export function FileTabContent(props: { tab: string }) {
     cancelAnimationFrame(scrollFrame)
   })
 
-  const renderCode = (source: string, wrapperClass: string) => (
+  const renderCode = (source: string, wrapperClass: string, extra?: Record<string, unknown>) => (
     <div
       ref={(el) => {
         wrap = el
@@ -474,6 +489,7 @@ export function FileTabContent(props: { tab: string }) {
           contents: source,
           cacheKey: cacheKey(),
         }}
+        {...(extra ?? {})}
         enableLineSelection
         selectedLines={selectedLines()}
         commentedLines={commentedLines()}
@@ -600,7 +616,7 @@ export function FileTabContent(props: { tab: string }) {
           </div>
         </Match>
         <Match when={state()?.loaded && isVideo()}>
-          {renderCode("", "pb-40")}
+          {renderCode("", "pb-40", { streamBase: streamBase() })}
         </Match>
         <Match when={state()?.loaded && isBinary()}>
           <div class="h-full px-6 pb-42 flex flex-col items-center justify-center text-center gap-6">

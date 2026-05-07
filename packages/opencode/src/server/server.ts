@@ -135,9 +135,16 @@ export namespace Server {
           // Allow CORS preflight requests to succeed without auth.
           // Browser clients sending Authorization headers will preflight with OPTIONS.
           if (c.req.method === "OPTIONS") return next()
+          // Allow /file/stream to bypass basic auth — the browser's <video src> cannot
+          // set custom headers. Auth is handled via the ?_pwd= query param checked below.
+          if (c.req.path === "/file/stream") return next()
           const password = Flag.OPENCODE_SERVER_PASSWORD
           if (!password) return next()
           const username = Flag.OPENCODE_SERVER_USERNAME ?? "opencode"
+          // Also accept password passed as ?_pwd= query param (for browser resource URLs
+          // like <video src> that cannot attach Authorization headers).
+          const queryPwd = c.req.query("_pwd")
+          if (queryPwd === password) return next()
           return basicAuth({ username, password })(c, next)
         })
         .use(async (c, next) => {

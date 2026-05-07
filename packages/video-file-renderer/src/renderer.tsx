@@ -9,8 +9,10 @@ export function VideoFileView(props: FileRenderProps) {
   const [error, setError] = createSignal(false)
 
   const src = () => {
-    const base = typeof window !== "undefined" ? window.location.origin : ""
-    return `${base}/file/stream?path=${encodeURIComponent(props.meta.path)}`
+    const base = props.streamBase ?? (typeof window !== "undefined" ? `${window.location.origin}/file/stream?` : "")
+    // streamBase already contains the route + base params; append &path= (or ?path= as fallback)
+    const sep = base.includes("?") ? "&" : "?"
+    return `${base}${sep}path=${encodeURIComponent(props.meta.path)}`
   }
 
   return (
