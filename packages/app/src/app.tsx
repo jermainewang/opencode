@@ -3,6 +3,7 @@ import { MetaProvider } from "@solidjs/meta"
 import { Navigate, Route, Router } from "@solidjs/router"
 import { ErrorBoundary, type JSX, lazy, type ParentProps, Show, Suspense } from "solid-js"
 import { markdownRenderer } from "@opencode-ai/markdown-file-renderer"
+import { videoRenderer } from "@opencode-ai/video-file-renderer"
 import { Code } from "@opencode-ai/ui/code"
 import { I18nProvider } from "@opencode-ai/ui/context"
 import { CodeComponentProvider } from "@opencode-ai/ui/context/code"
@@ -124,7 +125,7 @@ export function AppBaseProviders(props: ParentProps) {
             <ErrorBoundary fallback={(error) => <ErrorPage error={error} />}>
               <DialogProvider>
                 <MarkedProviderWithNativeParser>
-                  <FileRendererProvider renderers={[markdownRenderer]}>
+                  <FileRendererProvider renderers={[markdownRenderer, videoRenderer]}>
                     <DiffComponentProvider component={Diff}>
                       <CodeComponentProvider component={Code}>{props.children}</CodeComponentProvider>
                     </DiffComponentProvider>
