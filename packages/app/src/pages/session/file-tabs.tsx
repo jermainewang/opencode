@@ -15,6 +15,7 @@ import { useComments } from "@/context/comments"
 import { useLanguage } from "@/context/language"
 import { usePrompt } from "@/context/prompt"
 import { getSessionHandoff } from "@/pages/session/handoff"
+import { useSDK } from "@/context/sdk"
 
 const formatCommentLabel = (range: SelectedLineRange) => {
   const start = Math.min(range.start, range.end)
@@ -36,6 +37,7 @@ export function FileTabContent(props: { tab: string }) {
   const language = useLanguage()
   const prompt = usePrompt()
   const renderer = useFileRenderer()
+  const sdk = useSDK()
 
   const sessionKey = createMemo(() => `${params.dir}${params.id ? "/" + params.id : ""}`)
   const tabs = createMemo(() => layout.tabs(sessionKey))
@@ -468,6 +470,7 @@ export function FileTabContent(props: { tab: string }) {
         meta={{
           path: path() ?? "",
           mimeType: state()?.content?.mimeType,
+          streamUrl: path() ? sdk.client.file.streamUrl(path()!) : undefined,
         }}
         file={{
           name: path() ?? "",

@@ -264,7 +264,8 @@ export const FileRoutes = lazy(() =>
             const start = parseInt(m[1]!, 10)
             const end = m[2] ? parseInt(m[2], 10) : total - 1
             const clampedEnd = Math.min(end, total - 1)
-            return new Response(file.slice(start, clampedEnd + 1).stream(), {
+            const chunk = await file.slice(start, clampedEnd + 1).arrayBuffer()
+            return new Response(chunk, {
               status: 206,
               headers: {
                 "Content-Range": `bytes ${start}-${clampedEnd}/${total}`,

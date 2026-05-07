@@ -8,10 +8,7 @@ const videoExtensions = new Set(["mp4", "webm", "mov", "avi", "mkv", "flv", "wmv
 export function VideoFileView(props: FileRenderProps) {
   const [error, setError] = createSignal(false)
 
-  const src = () => {
-    const base = typeof window !== "undefined" ? window.location.origin : ""
-    return `${base}/file/stream?path=${encodeURIComponent(props.meta.path)}`
-  }
+  const src = () => props.meta.streamUrl ?? ""
 
   return (
     <div data-component="video" data-video-view="file">

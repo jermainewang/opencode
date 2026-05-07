@@ -13,6 +13,7 @@ export type LineRange = {
 export type FileMeta = {
   path: string
   mimeType?: string
+  streamUrl?: string
 }
 
 export type CommentSurface = {
