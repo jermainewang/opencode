@@ -63,6 +63,10 @@ export function FileTabContent(props: { tab: string }) {
     return c?.mimeType === "image/svg+xml"
   })
   const isBinary = createMemo(() => state()?.content?.type === "binary")
+  const isVideo = createMemo(() => {
+    const c = state()?.content
+    return c?.type === "binary" && c?.mimeType?.startsWith("video/")
+  })
   const svgContent = createMemo(() => {
     if (!isSvg()) return
     const c = state()?.content
@@ -594,6 +598,9 @@ export function FileTabContent(props: { tab: string }) {
               </div>
             </Show>
           </div>
+        </Match>
+        <Match when={state()?.loaded && isVideo()}>
+          {renderCode("", "pb-40")}
         </Match>
         <Match when={state()?.loaded && isBinary()}>
           <div class="h-full px-6 pb-42 flex flex-col items-center justify-center text-center gap-6">
