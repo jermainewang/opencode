@@ -94,13 +94,7 @@ export namespace File {
     "wma",
     "m4a",
     "weba",
-    "mp4",
-    "avi",
-    "mov",
-    "wmv",
-    "flv",
-    "webm",
-    "mkv",
+
     "zip",
     "tar",
     "gz",
@@ -235,6 +229,26 @@ export namespace File {
   function isBinaryByExtension(filepath: string): boolean {
     const ext = path.extname(filepath).toLowerCase().slice(1)
     return binaryExtensions.has(ext)
+  }
+
+  const videoMimeTypes: Record<string, string> = {
+    mp4: "video/mp4",
+    webm: "video/webm",
+    mov: "video/quicktime",
+    avi: "video/x-msvideo",
+    mkv: "video/x-matroska",
+    flv: "video/x-flv",
+    wmv: "video/x-ms-wmv",
+  }
+
+  function getVideoMimeType(filepath: string): string {
+    const ext = path.extname(filepath).toLowerCase().slice(1)
+    return videoMimeTypes[ext] ?? "video/mp4"
+  }
+
+  function isVideoByExtension(filepath: string): boolean {
+    const ext = path.extname(filepath).toLowerCase().slice(1)
+    return ext in videoMimeTypes
   }
 
   function isImage(mimeType: string): boolean {
@@ -445,6 +459,11 @@ export namespace File {
         return { type: "text", content, mimeType, encoding: "base64" }
       }
       return { type: "text", content: "" }
+    }
+
+    if (isVideoByExtension(file)) {
+      const mimeType = getVideoMimeType(file)
+      return { type: "binary", content: "", mimeType }
     }
 
     if (isBinaryByExtension(file)) {
