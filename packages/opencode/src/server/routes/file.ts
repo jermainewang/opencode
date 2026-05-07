@@ -1,5 +1,6 @@
 import { Hono } from "hono"
 import { describeRoute, validator, resolver } from "hono-openapi"
+import nodePath from "node:path"
 import z from "zod"
 import { File } from "../../file"
 import { Ripgrep } from "../../file/ripgrep"
@@ -230,6 +231,58 @@ export const FileRoutes = lazy(() =>
       async (c) => {
         const content = await File.status()
         return c.json(content)
+      },
+    )
+    .get(
+      "/file/stream",
+      describeRoute({
+        summary: "Stream file",
+        description: "Stream a file from the project directory with range-request support for video seeking.",
+        operationId: "file.stream",
+        responses: {
+          200: { description: "Full file stream" },
+          206: { description: "Partial content (range request)" },
+          403: { description: "Forbidden" },
+          404: { description: "Not found" },
+        },
+      }),
+      validator("query", z.object({ path: z.string() })),
+      async (c) => {
+        const full = nodePath.join(Instance.directory, c.req.valid("query").path)
+        if (!Instance.containsPath(full)) return c.text("Forbidden", 403)
+
+        const file = Bun.file(full)
+        if (!(await file.exists())) return c.text("Not Found", 404)
+
+        const total = file.size
+        const mime = file.type || "application/octet-stream"
+
+        const rangeHeader = c.req.header("Range") ?? c.req.header("range")
+        if (rangeHeader) {
+          const m = rangeHeader.match(/bytes=(\d+)-(\d*)/)
+          if (m) {
+            const start = parseInt(m[1]!, 10)
+            const end = m[2] ? parseInt(m[2], 10) : total - 1
+            const clampedEnd = Math.min(end, total - 1)
+            return new Response(file.slice(start, clampedEnd + 1).stream(), {
+              status: 206,
+              headers: {
+                "Content-Range": `bytes ${start}-${clampedEnd}/${total}`,
+                "Accept-Ranges": "bytes",
+                "Content-Length": String(clampedEnd - start + 1),
+                "Content-Type": mime,
+              },
+            })
+          }
+        }
+
+        return new Response(file.stream(), {
+          headers: {
+            "Content-Type": mime,
+            "Content-Length": String(total),
+            "Accept-Ranges": "bytes",
+          },
+        })
       },
     ),
 )
